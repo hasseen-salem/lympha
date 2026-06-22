@@ -18,7 +18,7 @@ BATCH_SIZE = 256
 EPOCHS = 30
 LEARNING_RATE = 1e-3
 SEED = 42
-CHECKPOINT_DIR = "output/checkpoints"
+CHECKPOINT_DIR = "/content/drive/MyDrive/Lympha/checkpoints"
 CHECKPOINT_INTERVAL = 5
 
 torch.manual_seed(SEED)
@@ -122,9 +122,9 @@ def main():
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    os.makedirs("output", exist_ok=True)
-    joblib.dump(scaler, "output/scaler.pkl")
-    print("Scaler saved to output/scaler.pkl", flush=True)
+    os.makedirs("/content/drive/MyDrive/Lympha", exist_ok=True)
+    joblib.dump(scaler, "/content/drive/MyDrive/Lympha/scaler.pkl")
+    print("Scaler saved to /content/drive/MyDrive/Lympha/scaler.pkl", flush=True)
 
     train_dataset = TensorDataset(
         torch.tensor(X_train, dtype=torch.float32),
@@ -208,10 +208,10 @@ def main():
 
     # Save final weights in safetensors format
     state_dict = {k: v.contiguous() for k, v in model.state_dict().items()}
-    save_file(state_dict, "output/model.safetensors")
-    print("Model saved to output/model.safetensors", flush=True)
+    save_file(state_dict, "/content/drive/MyDrive/Lympha/model.safetensors")
+    print("Model saved to /content/drive/MyDrive/Lympha/model.safetensors", flush=True)
 
-    with open("output/model_info.txt", "w") as f:
+    with open("/content/drive/MyDrive/Lympha/model_info.txt", "w") as f:
         f.write(f"input_dim={X_train.shape[1]}\n")
 
     print("Done!", flush=True)
