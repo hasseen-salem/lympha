@@ -102,11 +102,6 @@ def load_data():
         return train_df, test_df
 
     print("Loading dataset...", flush=True)
-    df = pd.read_parquet(DATA_PATH, columns=(COLS_TO_DROP, "Label"), memory_map=True)
-    # Actually we need to load all columns except COLS_TO_DROP. Let me reload.
-    del df
-    gc.collect()
-
     df = pd.read_parquet(DATA_PATH, memory_map=True)
     df.drop(columns=COLS_TO_DROP, errors="ignore", inplace=True)
     print(f"Dataset shape: {df.shape}", flush=True)
