@@ -12,7 +12,7 @@ import joblib
 import os
 import glob
 
-DATA_PATH = "/content/drive/MyDrive/Lympha/Training-data/NF-CSE-CIC-IDS2018-v2.parquet"
+DATA_PATH = "/content/drive/MyDrive/Lympha/Training_data/NF-CSE-CIC-IDS2018-v2.parquet"
 BATCH_SIZE = 256
 EPOCHS = 30
 LEARNING_RATE = 1e-3
