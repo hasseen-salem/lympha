@@ -12,8 +12,7 @@ import joblib
 import os
 import glob
 
-DATA_PATH = "Training_data/NF-UNSW-NB15-V2.parquet"
-SAMPLE_SIZE = 100_000
+DATA_PATH = "/content/drive/MyDrive/Lympha/Training-data/NF-CSE-CIC-IDS2018-v2.parquet"
 BATCH_SIZE = 256
 EPOCHS = 30
 LEARNING_RATE = 1e-3
@@ -52,31 +51,6 @@ class TrafficClassifier(nn.Module):
         return self.net(x)
 
 
-def load_and_sample():
-    print("Loading dataset...", flush=True)
-    df = pd.read_parquet(DATA_PATH)
-    df = df.drop(columns=COLS_TO_DROP, errors="ignore")
-    print(f"Dataset shape: {df.shape}", flush=True)
-    print(f"Label distribution:\n{df['Label'].value_counts()}", flush=True)
-
-    benign = df[df["Label"] == 0]
-    suspicious = df[df["Label"] == 1]
-
-    n_per_class = SAMPLE_SIZE // 2
-    n_per_class = min(n_per_class, len(benign), len(suspicious))
-
-    benign_sampled = benign.sample(n=n_per_class, random_state=SEED)
-    suspicious_sampled = suspicious.sample(n=n_per_class, random_state=SEED)
-
-    sampled = pd.concat([benign_sampled, suspicious_sampled], axis=0).sample(
-        frac=1, random_state=SEED
-    ).reset_index(drop=True)
-
-    print(f"Sampled shape: {sampled.shape}", flush=True)
-    print(f"Sampled label distribution:\n{sampled['Label'].value_counts()}", flush=True)
-    return sampled
-
-
 def find_latest_checkpoint():
     ckpts = sorted(glob.glob(os.path.join(CHECKPOINT_DIR, "checkpoint_epoch_*.pt")))
     return ckpts[-1] if ckpts else None
@@ -109,20 +83,33 @@ def save_checkpoint(model, optimizer, epoch, loss, is_best=False):
 
 
 def main():
-    df = load_and_sample()
+    print("Loading dataset...", flush=True)
+    df = pd.read_parquet(DATA_PATH)
+    df = df.drop(columns=COLS_TO_DROP, errors="ignore")
+    print(f"Dataset shape: {df.shape}", flush=True)
+    print(f"Label distribution:\n{df['Label'].value_counts()}", flush=True)
 
-    X = df.drop(columns=["Label"]).values.astype(np.float32)
-    y = df["Label"].values.astype(np.int64)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=SEED, stratify=y
+    # 80/20 stratified split on the full dataset
+    train_df, test_df = train_test_split(
+        df, test_size=0.2, random_state=SEED, stratify=df["Label"]
     )
+
+    print(f"Train: {len(train_df):,}  Test: {len(test_df):,}", flush=True)
+
+    # save test set for later inspection
+    os.makedirs("/content/drive/MyDrive/Lympha", exist_ok=True)
+    test_df.to_parquet("/content/drive/MyDrive/Lympha/test_set.parquet", index=False)
+    print(f"Test set saved to /content/drive/MyDrive/Lympha/test_set.parquet", flush=True)
+
+    X_train = train_df.drop(columns=["Label"]).values.astype(np.float32)
+    y_train = train_df["Label"].values.astype(np.int64)
+    X_test = test_df.drop(columns=["Label"]).values.astype(np.float32)
+    y_test = test_df["Label"].values.astype(np.int64)
 
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
-    os.makedirs("/content/drive/MyDrive/Lympha", exist_ok=True)
     joblib.dump(scaler, "/content/drive/MyDrive/Lympha/scaler.pkl")
     print("Scaler saved to /content/drive/MyDrive/Lympha/scaler.pkl", flush=True)
 
@@ -148,7 +135,6 @@ def main():
     start_epoch = 1
     best_val_loss = float("inf")
 
-    # Resume from latest checkpoint if available
     latest_ckpt = find_latest_checkpoint()
     if latest_ckpt:
         print(f"Resuming from checkpoint: {latest_ckpt}", flush=True)
@@ -199,14 +185,12 @@ def main():
             flush=True,
         )
 
-        # Save checkpoint at interval + best model
         is_best = val_loss < best_val_loss
         if is_best:
             best_val_loss = val_loss
         if epoch % CHECKPOINT_INTERVAL == 0 or is_best:
             save_checkpoint(model, optimizer, epoch, val_loss, is_best=is_best)
 
-    # Save final weights in safetensors format
     state_dict = {k: v.contiguous() for k, v in model.state_dict().items()}
     save_file(state_dict, "/content/drive/MyDrive/Lympha/model.safetensors")
     print("Model saved to /content/drive/MyDrive/Lympha/model.safetensors", flush=True)
