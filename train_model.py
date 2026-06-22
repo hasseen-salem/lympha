@@ -101,6 +101,7 @@ def load_data():
         print(f"Train: {len(train_df):,}  Test: {len(test_df):,}", flush=True)
         return train_df, test_df
 
+    print(f"Dataset: {DATA_PATH}", flush=True)
     print("Loading dataset...", flush=True)
     df = pd.read_parquet(DATA_PATH, memory_map=True)
     df.drop(columns=COLS_TO_DROP, errors="ignore", inplace=True)
