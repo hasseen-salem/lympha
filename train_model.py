@@ -92,6 +92,18 @@ def save_checkpoint(model, optimizer, epoch, loss, best_val_loss, is_best=False)
 def load_data():
     test_path = "/content/drive/MyDrive/Lympha/test_set.parquet"
     train_path = "/content/drive/MyDrive/Lympha/train_set.parquet"
+    ds_marker_path = "/content/drive/MyDrive/Lympha/.dataset_path"
+
+    # invalidate cached splits if dataset changed
+    cached_ds = None
+    if os.path.exists(ds_marker_path):
+        with open(ds_marker_path) as f:
+            cached_ds = f.read().strip()
+
+    if cached_ds != DATA_PATH:
+        for p in [train_path, test_path, ds_marker_path]:
+            if os.path.exists(p):
+                os.remove(p)
 
     # Use pre-saved splits if they exist
     if os.path.exists(train_path) and os.path.exists(test_path):
@@ -166,7 +178,8 @@ def main():
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
     model = TrafficClassifier(input_dim=train_dataset.tensors[0].shape[1]).to(device)
-    criterion = nn.CrossEntropyLoss()
+    class_weights = torch.tensor([1.0, 25.0], dtype=torch.float32).to(device)
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3
