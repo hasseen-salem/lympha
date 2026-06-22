@@ -7,7 +7,7 @@ import joblib
 
 DATA_PATH = "Training_data/test_set.parquet"
 MODEL_PATH = "output/model.safetensors"
-SCALER_PATH = "models/v1/scaler.pkl"
+SCALER_PATH = "output/scaler.pkl"
 BATCH_SIZE = 256
 SEED = 42
 
