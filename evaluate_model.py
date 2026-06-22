@@ -5,7 +5,7 @@ import torch.nn as nn
 from safetensors.torch import load_file
 import joblib
 
-DATA_PATH = "/content/drive/MyDrive/Lympha/Training_data/NF-CSE-CIC-IDS2018-v2.parquet"
+DATA_PATH = "/content/drive/MyDrive/Lympha/Training_data/NF-UNSW-NB15-V2.parquet"
 MODEL_PATH = "/content/drive/MyDrive/Lympha/model.safetensors"
 SCALER_PATH = "/content/drive/MyDrive/Lympha/scaler.pkl"
 BATCH_SIZE = 256

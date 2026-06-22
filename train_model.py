@@ -13,7 +13,7 @@ import joblib
 import os
 import glob
 
-DATA_PATH = "/content/drive/MyDrive/Lympha/Training_data/NF-CSE-CIC-IDS2018-v2.parquet"
+DATA_PATH = "/content/drive/MyDrive/Lympha/Training_data/NF-UNSW-NB15-V2.parquet"
 BATCH_SIZE = 128
 EPOCHS = 30
 LEARNING_RATE = 1e-3
@@ -127,12 +127,13 @@ def load_data():
 def main():
     train_df, test_df = load_data()
 
-    X_train = train_df.drop(columns=["Label"]).values.astype(np.float32)
+    F32_MAX = np.finfo(np.float32).max
+    X_train = np.clip(train_df.drop(columns=["Label"]).values, -F32_MAX, F32_MAX).astype(np.float32)
     y_train = train_df["Label"].values.astype(np.int64)
     del train_df
     gc.collect()
 
-    X_test = test_df.drop(columns=["Label"]).values.astype(np.float32)
+    X_test = np.clip(test_df.drop(columns=["Label"]).values, -F32_MAX, F32_MAX).astype(np.float32)
     y_test = test_df["Label"].values.astype(np.int64)
     del test_df
     gc.collect()
