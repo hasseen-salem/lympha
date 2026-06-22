@@ -6,8 +6,8 @@ from safetensors.torch import load_file
 import joblib
 
 DATA_PATH = "Training_data/NF-UNSW-NB15-V2.parquet"
-MODEL_PATH = "output/model.safetensors"
-SCALER_PATH = "output/scaler.pkl"
+MODEL_PATH = "/content/drive/MyDrive/Lympha/model.safetensors"
+SCALER_PATH = "/content/drive/MyDrive/Lympha/scaler.pkl"
 BATCH_SIZE = 256
 SEED = 42
 
@@ -49,7 +49,7 @@ def main():
     scaler = joblib.load(SCALER_PATH)
     X_scaled = scaler.transform(X)
 
-    with open("output/model_info.txt") as f:
+    with open("/content/drive/MyDrive/Lympha/model_info.txt") as f:
         input_dim = int(f.read().strip().split("=")[1])
 
     model = TrafficClassifier(input_dim=input_dim).to(device)
