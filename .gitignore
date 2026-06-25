@@ -1,3 +1,18 @@
-models/
+/models/
+venv/
+logs/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+checkpoints/
+custom_checkpoints/
+custom_models/
+custom_output/
+custom_processed/
+custom_raw/
+data/processed/
+data/raw/
+Training_data/
 
 

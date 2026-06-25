@@ -1,0 +1,134 @@
+# ── Data paths & dataset handling ──────────────────────────────────────────
+data:
+  dataset_path: "Training_data/NF-UNSW-NB15-V2.parquet"
+  train_split_path: "data/processed/train_set.parquet"
+  test_split_path: "data/processed/test_set.parquet"
+  dataset_marker_path: "data/processed/.dataset_path"
+  raw_path: "data/raw"
+  processed_path: "data/processed"
+  columns_to_drop: ["Attack"]
+  label_column: "Label"
+  test_size: 0.2
+  random_state: 42
+  stratify: true
+
+# ── Neural network architecture (Lympha TrafficClassifier) ─────────────────
+model:
+  input_dim: 41
+  continuous_dim: 40
+  hidden_dims: [512, 256, 128, 64]
+  dropouts: [0.3, 0.3, 0.2, 0.1]
+  num_classes: 2
+  use_batch_norm: true
+  port_vocab_size: 65536
+  proto_vocab_size: 256
+  src_port_embed_dim: 16
+  dst_port_embed_dim: 16
+  proto_embed_dim: 8
+
+# ── Deep learning training hyperparameters ─────────────────────────────────
+training:
+  batch_size: 128
+  epochs: 30
+  learning_rate: 0.001
+  seed: 42
+  class_weights: [1.0, 25.0]
+  optimizer: "adam"
+  scheduler:
+    name: "reduce_on_plateau"
+    mode: "min"
+    factor: 0.5
+    patience: 3
+  checkpoint:
+    enabled: true
+    directory: "checkpoints"
+    interval_epochs: 5
+    save_best: true
+  device: "auto"
+
+# ── Offline evaluation ─────────────────────────────────────────────────────
+evaluation:
+  batch_size: 256
+  default_threshold: 0.5
+  threshold_sweep: [0.5, 0.7, 0.85, 0.9, 0.95]
+  test_data_path: "local_test/test_set.parquet"
+
+# ── Artifact paths (preserves existing weight layout) ──────────────────────
+artifacts:
+  model_weights: "output/model.safetensors"
+  scaler: "output/scaler.pkl"
+  model_info: "output/model_info.txt"
+  feature_pipeline: "data/models/feature_pipeline.joblib"
+  supervised_model: "data/models/supervised_model.joblib"
+  unsupervised_model: "data/models/unsupervised_model.joblib"
+
+# ── Live feature engineering (SentryFlow pipeline) ─────────────────────────
+features:
+  selected_features:
+    - packet_length
+    - protocol_type
+    - src_port
+    - dst_port
+    - window_size
+    - ttl
+    - flags
+    - payload_entropy
+  scaler_type: "robust"
+
+# ── Legacy sklearn models (optional during SentryFlow absorption) ────────────
+models:
+  lightgbm:
+    n_estimators: 100
+    max_depth: 10
+    learning_rate: 0.1
+    num_leaves: 31
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_samples: 20
+    random_state: 42
+  isolation_forest:
+    n_estimators: 100
+    contamination: 0.02
+    max_samples: "auto"
+    random_state: 42
+
+# ── Packet capture (sniffer) ───────────────────────────────────────────────
+sniffer:
+  interface: "wlo1"
+  bpf_filter: "ip"
+  queue_maxsize: 10000
+  max_packets: 0
+  recv_timeout_sec: 0.1
+  simulation_file: null
+  backpressure_warn_ratio: 0.8
+  backpressure_critical_ratio: 0.95
+
+# ── Flow aggregation ───────────────────────────────────────────────────────
+aggregator:
+  idle_timeout_sec: 5.0
+  hard_timeout_sec: 10.0
+  max_flows: 10000
+  flush_interval_sec: 1.0
+
+# ── Daemon execution loop ──────────────────────────────────────────────────
+execution:
+  simulation_mode: true
+  log_level: "INFO"
+  flush_interval_sec: 2
+  detection_threshold: 0.5
+  detection_event_limit: 50
+  inference_backend: "neural"
+
+# ── Threat mitigation (nftables) ───────────────────────────────────────────
+mitigation:
+  enabled: true
+  table_name: "lympha"
+  set_name: "blackhole"
+  chain_name: "input"
+  block_timeout_sec: 3600
+  whitelist_ips:
+    - "127.0.0.1"
+    - "192.168.100.1"
+  whitelist_prefixes:
+    - "224."
+    - "239."
