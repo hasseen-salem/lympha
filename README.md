@@ -1,6 +1,6 @@
 # Lympha — Real-Time Network Intrusion Prevention
 
-Lympha is a live network intrusion prevention daemon that captures packets, aggregates them into bidirectional flows, scores them with an embedding-augmented neural network, and blocks threats via nftables — all in a single non-blocking pipeline.
+Lympha ->  is a live network intrusion prevention daemon that captures packets, aggregates them into bidirectional flows, scores them with an embedding-augmented neural network, and blocks threats via nftables — all in a single non-blocking pipeline.
 
 ## Architecture
 
